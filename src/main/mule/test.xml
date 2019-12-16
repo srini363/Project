@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="3c568408-da08-4158-be10-d4effdc30064" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="testFlow" doc:id="8165d657-73cf-4e98-b36c-0dd40126dbc4" >
+		<http:listener doc:name="Listener" doc:id="bac18b44-8512-4790-a460-7dd87375466a" config-ref="HTTP_Listener_config" path="/test"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4a773ccc-bf87-4972-99f3-ac9b361aec7c" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="ef694999-fd9d-47d4-9af3-9f8c74c0d527" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload splitBy ","]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="test" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="a440d1a3-cb55-4f6c-a84a-748e9222a362" collection="#[payload]" batchSize="3">
+			<ee:transform doc:name="Transform Message" doc:id="09b1c665-863e-4e16-b57b-fad834173833" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="test" ><![CDATA[%dw 2.0
+output application/java
+---
+ vars.test + ( payload ++ [2] ) default []
+]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="a347c874-6edc-4ed3-a17a-ff557543216c" message="#[vars.test]"/>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="2ba1bc9b-8eea-4634-9f3e-b987a30832e1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+vars.test]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="58e7ac67-b58e-4e0b-b0e7-e567c921cbf2" message="#[vars.test]"/>
+	</flow>
+</mule>
